@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+
+from signal import signal, SIGINT
+import subprocess
+import sys
+import argparse
+
+class colors:
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    NORMAL = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def handler(signal_received, frame):
+    print()
+    sys.exit(0)
+
+
+def get_pkg_name(line):
+    return line.split()[1].rpartition('-')[0]
+
+
+def print_search(results):
+    lines = []
+
+    for index, result in enumerate(results):
+        status, pkgname, rest = result.split(' ', 2)
+        pkgname, ver = pkgname.rsplit('-', 1)
+
+        if status == '[*]':
+            color = colors.GREEN
+        else:
+            color = colors.BLUE
+
+        index = f'{colors.BOLD}{index+1:<2}{colors.NORMAL}'
+        status = f'{color}{status}{colors.NORMAL}'
+        pkgname = f'{colors.BOLD}{pkgname}{colors.NORMAL}'
+        
+        lines.append(f'{index} {status} {pkgname} {ver} {rest}')
+    print('\n'.join(reversed(lines)))
+
+
+def check_pkg_exists(package):
+    return subprocess.run(['xbps-query', '-R'] + package, stdout=subprocess.DEVNULL).returncode == 0
+
+
+def install(packages):
+    subprocess.run(['sudo', 'xbps-install', '-u'] + packages)
+
+
+def search(package, filters):
+    results = subprocess.check_output(['xbps-query', '-Rs'] + package, universal_newlines=True).splitlines()
+    if filters:
+        results = [line for line in results if all(f in line for f in filters)]
+
+    packages = []
+    
+    if len(results) == 1:
+        packages.append(get_pkg_name(results[0]))
+    elif len(results) > 1:
+        print_search(results)
+
+        print()
+        print('Select (comma-separated)')
+        choice = input('> ')
+
+        if choice == '':
+            print('Cancelled')
+            sys.exit(1)
+        for c in choice.split(','):
+            try:
+                c = int(c)
+            except:
+                continue
+            if 0 < c <= len(results):
+                packages.append(get_pkg_name(results[c-1]))
+    else:
+        print('No results found')
+        sys.exit(0)
+
+    if packages:
+        install(packages)
+    else:
+        print('Nothing to do.')
+
+
+def update():
+    print('Checking for updates...')
+    subprocess.run(['sudo', 'xbps-install', '-Su'])
+
+
+def main(args):
+    if len(args.package) > 1:
+        if args.filter:
+            print('Filter option cannot be used with multiple package names. Ignoring.\n')
+        install(args.package)
+    elif len(args.package) == 1:
+        if check_pkg_exists(args.package):
+            install(args.package)
+        else:
+            search(args.package, args.filter)
+    else:
+        update()
+
+
+if __name__ == '__main__':
+    signal(SIGINT, handler)
+
+    parser = argparse.ArgumentParser(
+        description='XBPS Package Manager wrapper\n\n' +
+                    'Specify one or more exact package names to install,\n' +
+                    'or search via keyword (with optional filters to narrow results.',
+        usage='%(prog)s [-h] package [-f FILTER [FILTER ...]]\n' +
+        '       %(prog)s [-h] package [package ...]\n' +
+        '       %(prog)s [-h]',
+        )
+    parser.add_argument('package', nargs='*', help='Package(s) to search/install')
+    parser.add_argument('-f', '--filter', nargs='+', help='Additional keywords to filter results')
+    args = parser.parse_args()
+    
+    main(args)

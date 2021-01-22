@@ -50,16 +50,14 @@ def install(packages):
     subprocess.run(['sudo', 'xbps-install', '-u'] + packages)
 
 
-def search(package, filters):
-    results = subprocess.check_output(['xbps-query', '-Rs'] + package, universal_newlines=True).splitlines()
-    if filters:
-        results = [line for line in results if all(f in line for f in filters)]
+def search(keywords):
+    results = subprocess.check_output(['xbps-query', '-Rs', keywords.pop(0)], universal_newlines=True).splitlines()
+    if keywords:
+        results = [line for line in results if all(k in line for k in keywords)]
 
     packages = []
     
-    if len(results) == 1:
-        packages.append(get_pkg_name(results[0]))
-    elif len(results) > 1:
+    if len(results) > 1:
         print_search(results)
 
         print()
@@ -76,6 +74,8 @@ def search(package, filters):
                 continue
             if 0 < c <= len(results):
                 packages.append(get_pkg_name(results[c-1]))
+    elif len(results) == 1:
+        packages.append(get_pkg_name(results[0]))
     else:
         print('No results found')
         sys.exit(0)
@@ -92,15 +92,18 @@ def update():
 
 
 def main(args):
-    if len(args.package) > 1:
-        if args.filter:
-            print('Filter option cannot be used with multiple package names. Ignoring.\n')
+    if args.search:
+        if args.package:
+            print('Incorrect syntax. Unable to specify package name and use search mode at the same time.')
+            sys.exit(1)
+        search(args.search)
+    elif len(args.package) > 1:
         install(args.package)
     elif len(args.package) == 1:
         if check_pkg_exists(args.package):
             install(args.package)
         else:
-            search(args.package, args.filter)
+            search(args.package)
     else:
         update()
 
@@ -109,15 +112,12 @@ if __name__ == '__main__':
     signal(SIGINT, handler)
 
     parser = argparse.ArgumentParser(
-        description='XBPS Package Manager wrapper\n\n' +
-                    'Specify one or more exact package names to install,\n' +
-                    'or search via keyword (with optional filters to narrow results.',
-        usage='%(prog)s [-h] package [-f FILTER [FILTER ...]]\n' +
-        '       %(prog)s [-h] package [package ...]\n' +
-        '       %(prog)s [-h]',
-        )
+        description='XBPS Package Manager wrapper',
+        usage= '%(prog)s [-h] [ <pkgname(s)> | -s <keyword(s)>',
+    )
+
     parser.add_argument('package', nargs='*', help='Package(s) to search/install')
-    parser.add_argument('-f', '--filter', nargs='+', help='Additional keywords to filter results')
+    parser.add_argument('-s', '--search', nargs='+', help='Searches using specified keyword(s)')
     args = parser.parse_args()
     
     main(args)

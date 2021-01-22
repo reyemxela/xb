@@ -50,6 +50,10 @@ def install(packages):
     subprocess.run(['sudo', 'xbps-install', '-u'] + packages)
 
 
+def remove(packages):
+    subprocess.run(['sudo', 'xbps-remove'] + packages)
+
+
 def search(keywords):
     results = subprocess.check_output(['xbps-query', '-Rs', keywords.pop(0)], universal_newlines=True).splitlines()
     if keywords:
@@ -92,10 +96,10 @@ def update():
 
 
 def main(args):
+    if sum(map(bool, [args.package, args.search, args.remove])) > 1:
+        print("Invalid syntax, unable to mix and match packages/searching/removing")
+        exit(1)
     if args.search:
-        if args.package:
-            print('Incorrect syntax. Unable to specify package name and use search mode at the same time.')
-            sys.exit(1)
         search(args.search)
     elif len(args.package) > 1:
         install(args.package)
@@ -104,6 +108,8 @@ def main(args):
             install(args.package)
         else:
             search(args.package)
+    elif args.remove:
+        remove(args.remove)
     else:
         update()
 
@@ -113,11 +119,12 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='XBPS Package Manager wrapper',
-        usage= '%(prog)s [-h] [ <pkgname(s)> | -s <keyword(s)> ]',
+        usage= '%(prog)s [-h] [ <pkgname(s)> | -s <keyword(s)> | -r <pkgname(s)> ]',
     )
 
     parser.add_argument('package', nargs='*', help='Package(s) to search/install')
     parser.add_argument('-s', '--search', nargs='+', metavar='KEYWORD', help='Searches using specified keyword(s)')
+    parser.add_argument('-r', '--remove', nargs='+', metavar='PKGNAME', help='Package(s) to remove')
     args = parser.parse_args()
     
     main(args)

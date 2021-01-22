@@ -13,7 +13,7 @@ Just `chmod +x` and throw it in your PATH somewhere.
 Currently the only dependency besides Python3 is sudo.
 
 ## Usage:
-`xb [ <pkgname(s)> | -s <keyword(s)> ]`
+`xb [ <pkgname(s)> | -s <keyword(s)> | -r <pkgname(s)> ]`
 
 ### Examples:
 `xb <pkgname>`
@@ -26,6 +26,9 @@ Currently the only dependency besides Python3 is sudo.
 
 `xb -s <keyword(s)>`  
 - Performs a search using specified keyword(s) to refine results.
+
+`xb -r <pkgname(s)>`  
+- Removes specified packages (mirrors `xbps-remove` functionality).
 
 `xb`  
 - Calling `xb` with no arguments will perform a repository sync and full system update.

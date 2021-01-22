@@ -113,11 +113,11 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
         description='XBPS Package Manager wrapper',
-        usage= '%(prog)s [-h] [ <pkgname(s)> | -s <keyword(s)>',
+        usage= '%(prog)s [-h] [ <pkgname(s)> | -s <keyword(s)> ]',
     )
 
     parser.add_argument('package', nargs='*', help='Package(s) to search/install')
-    parser.add_argument('-s', '--search', nargs='+', help='Searches using specified keyword(s)')
+    parser.add_argument('-s', '--search', nargs='+', metavar='KEYWORD', help='Searches using specified keyword(s)')
     args = parser.parse_args()
     
     main(args)

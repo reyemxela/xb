@@ -13,16 +13,19 @@ Just `chmod +x` and throw it in your PATH somewhere.
 Currently the only dependancy besides Python3 is sudo.
 
 ## Usage:
-`xb [ <pkgname(s)> | <keyword> [-f keywords]]`
+`xb [ <pkgname(s)> | -s <keyword(s)> ]`
 
 ### Examples:
-`xb <keyword> [-f <keywords>]`  
-- If `<keyword>` matches a valid package name, that package is installed directly.  
-  Otherwise, a search is performed. When searching, `-f` can further refine results.
+`xb <pkgname>`
+- If `<pkgname>` matches a valid package name, that package is installed directly.  
+  Otherwise, a search is performed.
 
 `xb <pkg> <pkg> ...`  
 - When multiple arguments are specified, they are assumed to be exact package names,  
-  and `xb` will attempt to install them all (mirroring `xbps-install` functionality.
+  and `xb` will attempt to install them all (mirroring `xbps-install` functionality).
+
+`xb -s <keyword(s)>`  
+- Performs a search using specified keyword(s) to refine results.
 
 `xb`  
 - Calling `xb` with no arguments will perform a repository sync and full system update.

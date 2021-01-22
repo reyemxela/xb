@@ -9,3 +9,5 @@ Very much a work-in-progress, I'll be updating as I can.
 ## Installation
 
 Just `chmod +x` and throw it in your PATH somewhere.
+
+Currently the only dependancy besides Python3 is sudo.
